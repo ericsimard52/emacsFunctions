@@ -1,1 +1,56 @@
+(defun var2OrgTable ()
+  "Convert region to org table"
+  (interactive)
+  (if (use-region-p)(
+    let (
+      (selection (buffer-substring-no-properties (region-beginning) (region-end)))) ;; copy active region into selection
+        (let ((oldbuf (current-buffer))) ;; set oldbuf to current-buffer name
+          ;; set current buffer to read only
+          ;; If converting a long series of code, it could take a while
+          (toggle-read-only)
+          ;; Create buffer to work in
+          (get-buffer-create "var2orgtmp")
+          ;; This will not display the var2orgtmp buffer, but we work on it in the background
+          (set-buffer "var2orgtmp")
+          (insert selection)
+          (mark-whole-buffer) (activate-mark)
 
+          ;; Remove unwanted lines
+          (flush-lines "^$")
+          (flush-lines "/")
+          (flush-lines "*")
+
+          ;; Refresh active region
+          (region-beginning) (deactivate-mark)
+          (mark-whole-buffer) (activate-mark)
+
+          ;; Remove leading spaces
+          ;; TODO remove trailing
+          (delete-whitespace-rectangle (point-min) (point-max))
+          (region-beginning) (deactivate-mark)
+
+          ;; Start reformating
+          (beginning-of-buffer) (replace-string ";" "")
+          (beginning-of-buffer) (replace-string "public const " "const|public|")
+          (beginning-of-buffer) (replace-string "private const " "const|private|")
+          (beginning-of-buffer) (replace-string "public static " "static|public|")
+          (beginning-of-buffer) (replace-string "private static " "static|private|")
+          (beginning-of-buffer) (replace-string "public " "|public|")
+          (beginning-of-buffer) (replace-string "private " "|private|")
+          (beginning-of-buffer) (replace-string " = " "|")
+          (beginning-of-buffer) (replace-string ", " ",")
+
+          ;; Copy new data
+          (beginning-of-buffer) (mark-whole-buffer) (activate-mark)
+          (clipboard-kill-ring-save (region-beginning) (region-end))
+
+          ;; Kill working buffer
+          (kill-buffer "var2orgtmp")
+          (set-buffer oldbuf) (toggle-read-only) ;; Now read-write
+          (delete-region (region-beginning) (region-end)) ;; Delete old data
+          (yank) ;; Insert copied new data
+          (org-table-convert-region (region-beginning) (region-end)) ;; convert to table
+          )
+        )
+    )
+  )
