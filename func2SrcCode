@@ -1,0 +1,64 @@
+(defun func2SrcBlock ()
+  "Convert PHP funtions to org source block"
+  (interactive)
+  (if (use-region-p)(
+    let (
+      (selection (buffer-substring-no-properties (region-beginning) (region-end)))) ;; copy active region into selection
+        (let ((oldbuf (current-buffer))) ;; set oldbuf to current-buffer name
+          ;; set current buffer to read only
+          ;; If converting a long series of code, it could take a while
+          ;;(toggle-read-only)
+          ;; Create buffer to work in
+          (get-buffer-create "func2SrcBlock")
+          ;; This will not display the var2orgtmp buffer, but we work on it in the background
+          (set-buffer "func2SrcBlock")
+          (insert selection)
+          (mark-whole-buffer) (activate-mark)
+          ;;(switch-to-buffer "func2SrcBlock")
+          ;; Remove unwanted lines
+          (flush-lines "/")
+          (flush-lines "*")
+          ;; Remove leading spaces
+          (delete-whitespace-rectangle (point-min) (point-max))
+          (region-beginning) (deactivate-mark)
+          (beginning-of-buffer)
+          ;; Get the function name
+          (while (search-forward "function" nil t)
+            (right-word)
+            (left-word)
+            (set-mark (point))
+            (right-word)
+            (activate-mark)
+            (copy-region-as-kill (region-beginning) (region-end))
+            (deactivate-mark)
+            ;; Start writing org format
+            (beginning-of-line)
+            (insert "#+NAME: ")
+            (yank)
+            (newline)
+            (insert "#+BEGIN_SRC php")
+            (newline)
+            (search-forward "{")
+            (left-char)
+            (forward-sexp)
+            (newline)
+            (insert "#+END_SRC")
+            (newline)
+            (newline)
+            )
+
+          ;; Copy new data
+          (beginning-of-buffer) (mark-whole-buffer) (activate-mark)
+          (clipboard-kill-ring-save (region-beginning) (region-end))
+
+          ;; Kill working buffer
+          (kill-buffer "func2SrcBlock")
+          (set-buffer oldbuf) ;;(toggle-read-only) ;; Now read-write
+;;          (switch-to-buffer oldbuf)
+          (delete-region (region-beginning) (region-end)) ;; Delete old data
+          (yank) ;; Insert copied new data
+          (message "Adjusting indentation.")
+          )
+        )
+    )
+  )

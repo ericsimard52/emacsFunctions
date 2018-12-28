@@ -37,6 +37,7 @@
           (beginning-of-buffer) (replace-string "private static " "static|private|")
           (beginning-of-buffer) (replace-string "public " "|public|")
           (beginning-of-buffer) (replace-string "private " "|private|")
+          (beginning-of-buffer) (replace-string "protected " "|protected|")
           (beginning-of-buffer) (replace-string " = " "|")
           (beginning-of-buffer) (replace-string ", " ",")
 
