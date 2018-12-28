@@ -1,17 +1,18 @@
 (defun func2OrgTable ()
   "Convert PHP funtions to org table"
   (interactive)
+  (setq tmpBuffer "fun2orgtmp")
   (if (use-region-p)(
     let (
       (selection (buffer-substring-no-properties (region-beginning) (region-end)))) ;; copy active region into selection
         (let ((oldbuf (current-buffer))) ;; set oldbuf to current-buffer name
           ;; set current buffer to read only
           ;; If converting a long series of code, it could take a while
-          (toggle-read-only)
+          (read-only-mode 1)
           ;; Create buffer to work in
-          (get-buffer-create "func2orgtmp")
+          (get-buffer-create tmpBuffer)
           ;; This will not display the var2orgtmp buffer, but we work on it in the background
-          (set-buffer "func2orgtmp")
+          (set-buffer tmpBuffer)
           (insert selection)
           (mark-whole-buffer) (activate-mark)
 
@@ -20,6 +21,7 @@
           (flush-lines "/")
           (flush-lines "*")
 
+          
           ;; Refresh active region
           (region-beginning) (deactivate-mark)
           (mark-whole-buffer) (activate-mark)
@@ -45,10 +47,11 @@
           ;; Copy new data
           (beginning-of-buffer) (mark-whole-buffer) (activate-mark)
           (clipboard-kill-ring-save (region-beginning) (region-end))
-
+          (sit-for 3)
           ;; Kill working buffer
-          (kill-buffer "func2orgtmp")
-          (set-buffer oldbuf) (toggle-read-only) ;; Now read-write
+          (kill-buffer tmpBuffer)
+          
+          (set-buffer oldbuf) (read-only-mode -1) ;; Now read-write
           (delete-region (region-beginning) (region-end)) ;; Delete old data
           (yank) ;; Insert copied new data
           (org-table-convert-region (region-beginning) (region-end) "|") ;; convert to table
