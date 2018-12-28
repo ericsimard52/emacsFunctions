@@ -1,0 +1,56 @@
+(defun functionTemplate ()
+  "This is the docstring.
+You will want to adapt this to your need."
+
+  ;;The (interactive) line declares that this function is a command, and can be called with M-x or a key sequence
+  (interactive)
+
+  ;; This next section is optional
+  ;; If your function is to be interacting on a active region, it is best to copy the data into a buffer in the background.
+  ;; One good reason for this is that the region may change as you are making changes to it.
+  ;; This makes it easy to refresh the region's boundary
+  (if (use-region-p)(
+    ;; Set tmpBuffer variable, adjust to your need.
+    ;; There is also a way to have automated temporary buffer.
+    ;; But I did talk about setting variable, this is still a good use for it.
+    ;; Make sure to use a unique name because this is the buffer we will do our work.
+    (setq tmpBuffer "func2orgtmp")
+
+    ;; This is where the work starts.
+    let (
+      (selection (buffer-substring-no-properties (region-beginning) (region-end)))) ;; copy active region into selection
+        (let ((oldbuf (current-buffer))) ;; set oldbuf to current-buffer name
+          ;; set current buffer to read only
+          ;; If converting a long series of code, it could take a while
+          (read-only-mode 1)
+          ;; Create buffer to work in
+          (get-buffer-create tmpBuffer)
+          ;; This will not display the buffer, but we work on it in the background
+          (set-buffer tmpBuffer)
+          ;; insert content of variable selection
+          (insert selection)
+          (mark-whole-buffer) (activate-mark) ;; 2 commands, mark the entire buffer and set it as active region
+
+
+          ;; !!!! Do your work here !!!!!
+
+          
+          ;; Copy new data into the kill ring
+          ;; It would be a better idea to replace the content of selection
+          ;; But lets show you as much as possible.
+          (beginning-of-buffer) (mark-whole-buffer) (activate-mark)
+          (clipboard-kill-ring-save (region-beginning) (region-end))
+
+          ;; Kill working buffer
+          (kill-buffer tmpBuffer)
+          (set-buffer oldbuf) (read-only-mode -1) ;; Now read-write
+
+          (delete-region (region-beginning) (region-end)) ;; Delete old data
+          (yank) ;; Insert copied new data
+
+
+          ;; !!! Now your buffer contains the new data, this is a good place to add extra task if needed or finish the function.
+          )
+        )
+    )
+  )
